@@ -1,0 +1,5 @@
+models/distilbert_model/
+data/
+venv/
+__pycache__/
+*.pkl
