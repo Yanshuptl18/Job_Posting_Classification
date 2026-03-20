@@ -86,20 +86,35 @@ svm_model, tfidf, meta_model, tokenizer, bert_model, device = load_models()
 # =========================================================
 # ENSEMBLE PREDICTION
 # =========================================================
+# def predict_job_type(text):
+
+#     # SVM
+#     text_tfidf = tfidf.transform([text])
+#     svm_prob = svm_model.predict_proba(text_tfidf)
+
+#     # BERT
+#     bert_prob = bert_predict(text)
+
+#     # Ensemble
+#     meta_input = np.hstack((bert_prob, svm_prob))
+#     probs = meta_model.predict_proba(meta_input)[0]
+
+#     classes = meta_model.classes_
+
+#     pred_idx = np.argmax(probs)
+#     label = classes[pred_idx]
+#     confidence = probs[pred_idx]
+
+#     results = [(classes[i], probs[i]) for i in np.argsort(probs)[::-1]]
+
+#     return label, confidence, results
+
 def predict_job_type(text):
 
-    # SVM
     text_tfidf = tfidf.transform([text])
-    svm_prob = svm_model.predict_proba(text_tfidf)
 
-    # BERT
-    bert_prob = bert_predict(text)
-
-    # Ensemble
-    meta_input = np.hstack((bert_prob, svm_prob))
-    probs = meta_model.predict_proba(meta_input)[0]
-
-    classes = meta_model.classes_
+    probs = svm_model.predict_proba(text_tfidf)[0]
+    classes = svm_model.classes_
 
     pred_idx = np.argmax(probs)
     label = classes[pred_idx]
