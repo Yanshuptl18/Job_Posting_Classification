@@ -33,13 +33,10 @@ META_MODEL_PATH = BASE_PATH + "/models/meta_model.pkl"
 #BERT_MODEL_PATH = BASE_PATH + "/models/distilbert_model"
 BERT_MODEL_PATH = "microsoft/deberta-v3-small"
 
-# =========================================================
-# LOAD MODELS
-# =========================================================
 @st.cache_resource
 def load_models():
 
-    # Download only if not already present
+    # Download models
     if not os.path.exists("svm_model.pkl"):
         gdown.download("https://drive.google.com/uc?id=1krz9t3rl8Y9WfJ5z7OSWjay_VRZoE_YZ", "svm_model.pkl", quiet=False)
 
@@ -49,21 +46,24 @@ def load_models():
     if not os.path.exists("meta.pkl"):
         gdown.download("https://drive.google.com/uc?id=1N7wMZVX-PzMdiU8byZyTCeNgx6vkWFWV", "meta.pkl", quiet=False)
 
-    # Load models
+    # Load ML models
     svm_model = joblib.load("svm_model.pkl")
     tfidf = joblib.load("tfidf.pkl")
     meta_model = joblib.load("meta.pkl")
 
-    # Load BERT from HuggingFace
-    AutoTokenizer.from_pretrained("distilbert-base-uncased")
-    AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
+    # CORRECT BERT LOADING
+    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+
+    bert_model = AutoModelForSequenceClassification.from_pretrained(
+        "distilbert-base-uncased"
+    )
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+
     bert_model.to(device)
     bert_model.eval()
 
     return svm_model, tfidf, meta_model, tokenizer, bert_model, device
-
 # =========================================================
 # BERT PREDICTION
 # =========================================================
