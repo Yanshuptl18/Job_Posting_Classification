@@ -55,8 +55,8 @@ def load_models():
     meta_model = joblib.load("meta.pkl")
 
     # Load BERT from HuggingFace
-    tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-v3-small", use_fast = False)
-    bert_model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-v3-small")
+    AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     bert_model.to(device)
