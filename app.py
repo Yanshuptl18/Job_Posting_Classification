@@ -7,6 +7,8 @@ import torch
 import numpy as np
 import pandas as pd
 import shap
+import gdown
+import os
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # =========================================================
@@ -36,20 +38,31 @@ BERT_MODEL_PATH = "microsoft/deberta-v3-small"
 # =========================================================
 @st.cache_resource
 def load_models():
-    svm_model = joblib.load(SVM_MODEL_PATH)
-    tfidf = joblib.load(TFIDF_PATH)
-    meta_model = joblib.load(META_MODEL_PATH)
 
-    tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL_PATH)
-    bert_model = AutoModelForSequenceClassification.from_pretrained(BERT_MODEL_PATH)
+    # Download only if not already present
+    if not os.path.exists("svm_model.pkl"):
+        gdown.download("https://drive.google.com/uc?id=1krz9t3rl8Y9WfJ5z7OSWjay_VRZoE_YZ", "svm_model.pkl", quiet=False)
+
+    if not os.path.exists("tfidf.pkl"):
+        gdown.download("https://drive.google.com/uc?id=1tKr1XOzux_7-qwaGKdnTvfgbGMgB1Y0L", "tfidf.pkl", quiet=False)
+
+    if not os.path.exists("meta.pkl"):
+        gdown.download("https://drive.google.com/uc?id=1N7wMZVX-PzMdiU8byZyTCeNgx6vkWFWV", "meta.pkl", quiet=False)
+
+    # Load models
+    svm_model = joblib.load("svm_model.pkl")
+    tfidf = joblib.load("tfidf.pkl")
+    meta_model = joblib.load("meta.pkl")
+
+    # Load BERT from HuggingFace
+    tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-v3-small")
+    bert_model = AutoModelForSequenceClassification.from_pretrained("microsoft/deberta-v3-small")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     bert_model.to(device)
     bert_model.eval()
 
     return svm_model, tfidf, meta_model, tokenizer, bert_model, device
-
-svm_model, tfidf, meta_model, tokenizer, bert_model, device = load_models()
 
 # =========================================================
 # BERT PREDICTION
@@ -67,6 +80,8 @@ def bert_predict(text):
         outputs = bert_model(**inputs)
 
     return torch.softmax(outputs.logits, dim=1).cpu().numpy()
+
+svm_model, tfidf, meta_model, tokenizer, bert_model, device = load_models()
 
 # =========================================================
 # ENSEMBLE PREDICTION
@@ -199,7 +214,10 @@ if st.button("🚀 Predict"):
         pred_class = np.argmax(svm_model.predict_proba(sample_vec))
 
         feature_names = tfidf.get_feature_names_out()
-        values = shap_values.values[0][:, pred_class]
+        #values = shap_values.values[0][:, pred_class]
+        values = shap_values.values[0]
+        if values.ndim > 1:
+            values = values[:, pred_class]
         sample_dense = sample_vec.toarray()[0]
 
         indices = np.where(sample_dense != 0)[0]
@@ -230,7 +248,7 @@ if st.button("🚀 Predict"):
                 "Importance": np.round(word_values[top_indices], 3)
             })
 
-            st.dataframe(df_words, width="stretch")
+            st.dataframe(df_words, use_container_width=True)
 
             # =============================================
             # BAR GRAPH
