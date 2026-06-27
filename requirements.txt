@@ -1,10 +1,13 @@
-streamlit
-scikit-learn
-pandas
-numpy
-joblib
+streamlit==1.46.1
+
+scikit-learn==1.6.1
+numpy==2.0.2
+pandas==2.2.2
+joblib==1.5.3
+
 transformers
-torch --index-url https://download.pytorch.org/whl/cpu
+torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+
 shap
 gdown
 tiktoken
